@@ -54,16 +54,34 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!db || !notifList) return;
 
         try {
-            // Fetch latest 5 activity logs
-            const snapshot = await db.collection('activityLogs')
+            const role = localStorage.getItem('role');
+            const loggedInStr = localStorage.getItem('loggedInStudent');
+            const query = db.collection('activityLogs');
+
+            const snapshot = await query
                 .orderBy('timestamp', 'desc')
-                .limit(5)
+                .limit(20)
                 .get();
 
+            let logs = [];
+            snapshot.forEach(doc => logs.push({ id: doc.id, ...doc.data() }));
+
+            if (role === 'student' && loggedInStr) {
+                const student = JSON.parse(loggedInStr);
+                logs = logs.filter(log => log.studentName === student.name);
+            }
+
+            logs = logs.slice(0, 5);
             notifList.innerHTML = '';
             
-            if (snapshot.empty) {
-                notifList.innerHTML = '<p style="padding: 1rem; text-align: center; color: var(--text-muted);">No new notifications.</p>';
+            // Get dashboard log list if it exists
+            const dashboardLogList = document.querySelector('.log-list');
+            if (dashboardLogList) dashboardLogList.innerHTML = '';
+            
+            if (logs.length === 0) {
+                const emptyMsg = '<p style="padding: 1rem; text-align: center; color: var(--text-muted);">No new notifications.</p>';
+                notifList.innerHTML = emptyMsg;
+                if (dashboardLogList) dashboardLogList.innerHTML = emptyMsg;
                 if (badge) badge.style.display = 'none';
                 return;
             }
@@ -71,18 +89,18 @@ document.addEventListener('DOMContentLoaded', () => {
             // Update badge count
             const dropdownBadge = document.querySelector('.dropdown-badge');
             if (badge) {
-                badge.innerText = snapshot.size;
+                badge.innerText = logs.length;
                 badge.style.display = 'flex';
             }
             if (dropdownBadge) {
-                dropdownBadge.innerText = `${snapshot.size} New`;
+                dropdownBadge.innerText = `${logs.length} New`;
                 dropdownBadge.style.display = 'inline-block';
             }
 
-            snapshot.forEach(doc => {
-                const data = doc.data();
+            logs.forEach(data => {
                 const time = data.timestamp ? data.timestamp.toDate() : new Date();
                 const timeAgo = getTimeAgo(time);
+                const timeStr = time.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
                 
                 let iconClass = 'scan';
                 let icon = 'fa-qrcode';
@@ -95,7 +113,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     icon = 'fa-circle-exclamation';
                 }
 
-                const item = `
+                // Dropdown Item
+                const dropdownItem = `
                     <div class="notification-item">
                         <div class="notif-icon ${iconClass}">
                             <i class="fa-solid ${icon}"></i>
@@ -107,12 +126,28 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     </div>
                 `;
-                notifList.insertAdjacentHTML('beforeend', item);
+                notifList.insertAdjacentHTML('beforeend', dropdownItem);
+
+                // Dashboard Log Item
+                if (dashboardLogList) {
+                    const logItem = `
+                        <div class="log-item">
+                            <div class="log-time">${timeStr}</div>
+                            <div class="log-details">
+                                <h4>${data.studentName}</h4>
+                                <p>${data.action}</p>
+                            </div>
+                        </div>
+                    `;
+                    dashboardLogList.insertAdjacentHTML('beforeend', logItem);
+                }
             });
 
         } catch (error) {
             console.error('Error loading notifications:', error);
-            notifList.innerHTML = '<p style="padding: 1rem; text-align: center; color: var(--danger);">Failed to load.</p>';
+            if (notifList) {
+                notifList.innerHTML = '<p style="padding: 1rem; text-align: center; color: var(--danger);">Failed to load.</p>';
+            }
         }
     };
 

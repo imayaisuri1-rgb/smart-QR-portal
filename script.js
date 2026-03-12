@@ -80,20 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Check role and personalize dashboard
     const initDashboard = async () => {
         const role = localStorage.getItem('role');
-        const adminWelcome = document.getElementById('admin-welcome');
         const loggedInStr = localStorage.getItem('loggedInStudent');
-        
-        // Handle "View All" activity button
-        const viewAllBtn = document.getElementById('view-all-activity');
-        if (viewAllBtn) {
-            viewAllBtn.addEventListener('click', () => {
-                if (role === 'admin') {
-                    window.location.href = 'attendance.html';
-                } else {
-                    window.location.href = 'students.html'; // Academic Profile
-                }
-            });
-        }
 
         try {
             if (role === 'student' && loggedInStr) {
@@ -122,29 +109,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Real-time attendance percentage based on logic (placeholder for now, but 0 instead of 92)
                 if(attendanceEl) attendanceEl.innerText = "100%"; 
 
-                await initLogs('student', student.name);
-            } else {
+                // Logs are now handled by notifications.js for better synchronization
+            } else if (role === 'admin') {
                 // Default Admin view
                 if(adminWelcome) adminWelcome.innerHTML = `<span class="text-glow">Welcome back, Admin!</span>`;
                 
                 // Admin stats calculation
-                // 1. Total Students
                 const studentSnapshot = await db.collection('students').get();
                 const totalStudentsEl = document.getElementById('total-students-stat');
                 if (totalStudentsEl) totalStudentsEl.innerText = studentSnapshot.size;
 
-                // 2. Total Present (Count records in 'attendance' for today)
                 const todayStr = new Date().toISOString().split('T')[0];
                 const attendanceSnapshot = await db.collection('attendance').where('date', '==', todayStr).get();
                 const totalPresentEl = document.getElementById('total-present-stat');
                 if (totalPresentEl) totalPresentEl.innerText = attendanceSnapshot.size;
 
-                // 3. Recent Logs Count
                 const logsSnapshot = await db.collection('activityLogs').get();
                 const logsEl = document.getElementById('recent-logs-count');
                 if (logsEl) logsEl.innerText = logsSnapshot.size;
 
-                await initLogs('admin');
+                // Logs are now handled by notifications.js for better synchronization
             }
         } catch (error) {
             console.error('Error initializing dashboard:', error);

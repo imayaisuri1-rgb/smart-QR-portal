@@ -57,12 +57,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         earnedCredits: 96,
                         standing: "Good",
                         modules: [
-                            { name: "Advanced Algorithms", score: 94, grade: "A" },
-                            { name: "Data Structures", score: 90, grade: "A-" },
-                            { name: "Computer Networks", score: 86, grade: "B+" },
-                            { name: "Operating Systems", score: 83, grade: "B" },
-                            { name: "Web Development", score: 98, grade: "A+" },
-                            { name: "Database Systems", score: 78, grade: "C+" }
+                            { name: "Advanced Algorithms", score: 94, grade: "A", credits: 4 },
+                            { name: "Data Structures", score: 90, grade: "A-", credits: 4 },
+                            { name: "Computer Networks", score: 86, grade: "B+", credits: 3 },
+                            { name: "Operating Systems", score: 83, grade: "B", credits: 4 },
+                            { name: "Web Development", score: 98, grade: "A+", credits: 3 },
+                            { name: "Database Systems", score: 78, grade: "C+", credits: 3 }
                         ]
                     },
                     { 
@@ -74,9 +74,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         earnedCredits: 80,
                         standing: "Good",
                         modules: [
-                            { name: "Microeconomics", score: 85, grade: "B" },
-                            { name: "Business Law", score: 92, grade: "A-" },
-                            { name: "Marketing", score: 75, grade: "C" }
+                            { name: "Microeconomics", score: 85, grade: "B", credits: 3 },
+                            { name: "Business Law", score: 92, grade: "A-", credits: 3 },
+                            { name: "Marketing", score: 75, grade: "C", credits: 3 }
                         ]
                     },
                     { 
@@ -88,9 +88,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         earnedCredits: 104,
                         standing: "Excellent",
                         modules: [
-                            { name: "Fluid Mechanics", score: 95, grade: "A" },
-                            { name: "Thermodynamics", score: 91, grade: "A-" },
-                            { name: "Engineering Design", score: 98, grade: "A+" }
+                            { name: "Fluid Mechanics", score: 95, grade: "A", credits: 4 },
+                            { name: "Thermodynamics", score: 91, grade: "A-", credits: 4 },
+                            { name: "Engineering Design", score: 98, grade: "A+", credits: 4 }
                         ]
                     }
                 ];
@@ -157,6 +157,14 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             // Save to Firestore
             await db.collection('students').doc(newStudent.id).set(newStudent);
+            
+            // Log activity for notification
+            await db.collection('activityLogs').add({
+                studentName: newStudent.name,
+                action: "Portal Registration: Welcome to SmartCampus!",
+                timestamp: firebase.firestore.Timestamp.now(),
+                role: "admin"
+            });
             
             // Show the generated QR
             const qrData = encodeURIComponent(`Student:${newStudent.id}`);

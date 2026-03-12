@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     </div>
                     <div class="module-grade ${getGradeClass(module.grade)}">${module.grade}</div>
-                    <div class="text-muted" style="font-size: 0.8rem; margin-top: 5px;">Score: ${module.score}%</div>
+                    <div class="text-muted" style="font-size: 0.8rem; margin-top: 5px;">Score: ${module.score}% | Credits: ${module.credits || 0}</div>
                     <div class="progress-bar-bg">
                         <div class="progress-bar-fill" style="width: ${module.score}%; background: ${getGradeColor(module.grade)};"></div>
                     </div>
@@ -171,6 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const module = student.modules[moduleIndex];
                 document.getElementById('module-name-input').value = module.name;
                 document.getElementById('module-score-input').value = module.score;
+                document.getElementById('module-credits-input').value = module.credits || '';
                 document.getElementById('module-grade-input').value = module.grade;
             } else {
                 moduleForm.reset();
@@ -188,11 +189,23 @@ document.addEventListener('DOMContentLoaded', () => {
             const doc = await db.collection('students').doc(studentId).get();
             const student = doc.data();
             student.modules.splice(moduleIndex, 1);
+            const deletedModuleName = student.modules[moduleIndex] ? student.modules[moduleIndex].name : 'Module';
             updateStudentGPA(student);
             await db.collection('students').doc(studentId).update({
                 modules: student.modules,
-                gpa: student.gpa
+                gpa: student.gpa,
+                earnedCredits: student.earnedCredits,
+                standing: student.standing
             });
+
+            // Log activity for notification
+            await db.collection('activityLogs').add({
+                studentName: student.name,
+                action: `Module Deleted: ${deletedModuleName}`,
+                timestamp: firebase.firestore.Timestamp.now(),
+                role: "admin"
+            });
+
             showStudentDetail(studentId);
         } catch (error) {
             console.error('Error deleting module:', error);
@@ -202,6 +215,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const updateStudentGPA = (student) => {
         if (!student.modules || student.modules.length === 0) {
             student.gpa = 0.0;
+            student.earnedCredits = 0;
+            student.standing = "N/A";
             return;
         }
         const gradePoints = {
@@ -209,8 +224,31 @@ document.addEventListener('DOMContentLoaded', () => {
             'B+': 3.3, 'B': 3.0, 'B-': 2.7,
             'C+': 2.3, 'C': 2.0, 'F': 0.0
         };
-        const totalPoints = student.modules.reduce((acc, m) => acc + (gradePoints[m.grade] || 0), 0);
-        student.gpa = totalPoints / student.modules.length;
+        
+        let totalPoints = 0;
+        let totalCredits = 0;
+        let earnedCredits = 0;
+
+        student.modules.forEach(m => {
+            const credits = parseInt(m.credits || 0);
+            const points = gradePoints[m.grade] || 0;
+            
+            totalPoints += (points * credits);
+            totalCredits += credits;
+            
+            // Earn credits if grade is not F
+            if (m.grade !== 'F') {
+                earnedCredits += credits;
+            }
+        });
+
+        student.gpa = totalCredits > 0 ? (totalPoints / totalCredits) : 0.0;
+        student.earnedCredits = earnedCredits;
+        
+        // Determine standing based on GPA
+        if (student.gpa >= 3.5) student.standing = "Excellent";
+        else if (student.gpa >= 2.0) student.standing = "Good";
+        else student.standing = "At Risk";
     };
 
     // Event Listeners
@@ -230,6 +268,15 @@ document.addEventListener('DOMContentLoaded', () => {
         closeModuleModal.addEventListener('click', () => moduleModal.style.display = 'none');
     }
 
+    // Print Transcript Handler
+    const printBtn = document.getElementById('print-transcript');
+
+    if (printBtn) {
+        printBtn.addEventListener('click', () => {
+            window.print();
+        });
+    }
+
     moduleForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         try {
@@ -240,6 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const moduleData = {
                 name: document.getElementById('module-name-input').value,
                 score: parseInt(document.getElementById('module-score-input').value),
+                credits: parseInt(document.getElementById('module-credits-input').value || 0),
                 grade: document.getElementById('module-grade-input').value
             };
 
@@ -255,7 +303,17 @@ document.addEventListener('DOMContentLoaded', () => {
             
             await db.collection('students').doc(currentEditingStudentId).update({
                 modules: student.modules,
-                gpa: student.gpa
+                gpa: student.gpa,
+                earnedCredits: student.earnedCredits,
+                standing: student.standing
+            });
+
+            // Log activity for notification
+            await db.collection('activityLogs').add({
+                studentName: student.name,
+                action: indexStr !== '' ? `Module Updated: ${moduleData.name}` : `New Module Added: ${moduleData.name}`,
+                timestamp: firebase.firestore.Timestamp.now(),
+                role: "admin"
             });
 
             moduleModal.style.display = 'none';

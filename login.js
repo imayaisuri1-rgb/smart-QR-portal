@@ -22,12 +22,12 @@ document.addEventListener('DOMContentLoaded', () => {
         tabStudent.style.background = 'linear-gradient(135deg, var(--primary), var(--accent-dark))';
         tabStudent.style.border = 'none';
         tabStudent.style.color = 'white';
-        
+
         tabAdmin.className = 'btn-secondary';
         tabAdmin.style.background = 'transparent';
         tabAdmin.style.border = '1px solid var(--primary)';
         tabAdmin.style.color = 'var(--text-main)';
-        
+
         formStudent.style.display = 'flex';
         formAdmin.style.display = 'none';
     });
@@ -37,30 +37,33 @@ document.addEventListener('DOMContentLoaded', () => {
         tabAdmin.style.background = 'linear-gradient(135deg, var(--primary), var(--accent-dark))';
         tabAdmin.style.border = 'none';
         tabAdmin.style.color = 'white';
-        
+
         tabStudent.className = 'btn-secondary';
         tabStudent.style.background = 'transparent';
         tabStudent.style.border = '1px solid var(--primary)';
         tabStudent.style.color = 'var(--text-main)';
-        
+
         formAdmin.style.display = 'flex';
         formStudent.style.display = 'none';
     });
 
 
     // --- QR Scanner Logic (Student) ---
-    
+
     // Auth Success Handler
     const handleSuccessfulAuth = (userType, metadata = {}) => {
         scanStatus.innerHTML = '<i class="fa-solid fa-check-circle"></i> Authenticated! Redirecting...';
         scanStatus.style.color = "var(--success)";
-        
+
         // Save to local storage to persist the role across pages
         localStorage.setItem('role', userType);
-        if (metadata.id) {
+        if (userType === 'student' && metadata.id) {
             localStorage.setItem('loggedInStudent', JSON.stringify(metadata));
+        } else if (userType === 'admin') {
+            localStorage.setItem('adminId', metadata.username || 'admin');
         } else {
             localStorage.removeItem('loggedInStudent');
+            localStorage.removeItem('adminId');
         }
 
         setTimeout(() => {
@@ -69,20 +72,20 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const handleSuccessfulScan = async (qrData) => {
-        if(isScanning) {
+        if (isScanning) {
             await stopScan();
             // Determine ID. e.g. "Student:SC-2489"
             let studentId = qrData;
-            if(qrData.includes('Student:')) {
+            if (qrData.includes('Student:')) {
                 studentId = qrData.split('Student:')[1].trim();
             }
-            
+
             try {
                 // Fetch student from Firestore
                 const doc = await db.collection('students').doc(studentId).get();
                 if (doc.exists) {
                     const student = doc.data();
-                    
+
                     // Add a log entry for the login
                     await db.collection('activityLogs').add({
                         studentName: student.name,
@@ -97,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const minutes = now.getMinutes().toString().padStart(2, '0');
                     const ampm = hours >= 12 ? 'PM' : 'AM';
                     const displayHour = hours > 12 ? hours - 12 : (hours === 0 ? 12 : hours);
-                    
+
                     await db.collection('attendance').add({
                         id: student.id,
                         name: student.name,
@@ -132,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const startScan = async () => {
         loginArt.style.opacity = '0';
         QRUI.classList.add('active');
-        
+
         if (!html5QrCode) {
             html5QrCode = new Html5Qrcode("qr-reader");
         }
@@ -142,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
             scanStatus.style.color = "var(--text-main)";
 
             await html5QrCode.start(
-                { facingMode: "environment" }, 
+                { facingMode: "environment" },
                 {
                     fps: 10,
                     qrbox: { width: 250, height: 250 },
@@ -158,7 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
             isScanning = true;
             scanStatus.innerHTML = '<i class="fa-solid fa-qrcode"></i> Scanning...';
             scanStatus.style.color = "var(--accent)";
-            
+
         } catch (err) {
             console.error("Error starting camera", err);
             scanStatus.innerHTML = 'Camera Error. Permission denied?';
@@ -188,11 +191,11 @@ document.addEventListener('DOMContentLoaded', () => {
             loginArt.style.opacity = '1';
         });
     });
-    
+
     // File upload handle
     qrUploadInput.addEventListener('change', (e) => {
         if (e.target.files.length == 0) return;
-        
+
         if (!html5QrCode) {
             html5QrCode = new Html5Qrcode("qr-reader");
         }
@@ -200,7 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const imageFile = e.target.files[0];
         scanStatus.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Analyzing Image...';
         scanStatus.style.color = "var(--text-main)";
-        
+
         html5QrCode.scanFile(imageFile, true)
             .then(decodedText => {
                 isScanning = true; // Pretend we are scanning so stopScan runs properly
@@ -210,7 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 scanStatus.innerHTML = 'No QR Code detected in image.';
                 scanStatus.style.color = "var(--danger)";
             });
-            
+
         e.target.value = '';
     });
 
@@ -222,15 +225,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const btn = formStudent.querySelector('.btn-primary');
         const idInput = document.getElementById('student-id').value;
         const originalText = btn.innerHTML;
-        
+
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Authenticating';
         btn.disabled = true;
-        
+
         try {
             const doc = await db.collection('students').doc(idInput).get();
             if (doc.exists) {
                 const student = doc.data();
-                
+
                 await db.collection('activityLogs').add({
                     studentName: student.name,
                     action: "Authorized - ID Login",
@@ -297,7 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     formAdmin.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
+
         if (!db) {
             alert('Database not connected. Check configuration.');
             return;
@@ -310,7 +313,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Authenticating';
         btn.disabled = true;
-        
+
         try {
             // We use the username as the document ID for quick lookup
             const adminRef = db.collection('admins').doc(username);
@@ -318,13 +321,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (doc.exists) {
                 const adminData = doc.data();
-                
+
                 // Simple password check
                 if (adminData.password === password) {
                     await adminRef.update({
                         lastLogin: firebase.firestore.Timestamp.now()
                     });
-                    
+
                     await db.collection('activityLogs').add({
                         studentName: "Admin",
                         action: "Admin Login Successful",
@@ -332,7 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         role: "admin"
                     });
 
-                    handleSuccessfulAuth('admin');
+                    handleSuccessfulAuth('admin', adminData);
                 } else {
                     alert('Invalid admin password.');
                     btn.innerHTML = originalText;

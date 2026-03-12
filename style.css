@@ -62,6 +62,7 @@ body {
 
 .logo {
     display: flex;
+    justify-content: space-between;
     align-items: center;
     gap: 0.75rem;
     padding-bottom: 2rem;
@@ -284,15 +285,112 @@ body {
 .log-details h4 { font-size: 0.95rem; }
 .log-details p { font-size: 0.8rem; color: var(--text-muted); }
 
-/* Responsive */
+/* Responsive Design */
+.mobile-only {
+    display: none;
+}
+
 @media (max-width: 1024px) {
+    .app-container {
+        flex-direction: column;
+        height: auto;
+        padding: 0.5rem;
+    }
+
+    .sidebar {
+        position: fixed;
+        left: -280px;
+        top: 0;
+        bottom: 0;
+        width: 260px;
+        z-index: 2000;
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        height: 100vh;
+        background: rgba(15, 15, 25, 0.98);
+    }
+
+    .sidebar.active {
+        left: 0;
+        box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+    }
+
+    .main-content {
+        padding-top: 1rem;
+        height: auto;
+    }
+
+    .mobile-only {
+        display: flex;
+    }
+
+    .top-bar {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+
+    .top-bar > div {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .search-bar {
+        width: 100% !important;
+    }
+
+    .stats-section {
+        grid-template-columns: 1fr;
+    }
+
     .dashboard-grid {
         grid-template-columns: 1fr;
     }
-    .activity-log {
-        grid-row: 3;
-        grid-column: 1;
+
+    .user-profile {
+        width: 100%;
+        justify-content: flex-end;
     }
+
+    /* Student View Table Responsive */
+    .table-responsive {
+        overflow-x: auto;
+    }
+    
+    .attendance-table th, .attendance-table td {
+        min-width: 120px;
+    }
+
+    .student-profile {
+        grid-template-columns: 1fr !important;
+    }
+
+    .modal-content {
+        width: 95%;
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .logo h2 { font-size: 1.2rem; }
+    .welcome-text h1 { font-size: 1.5rem; }
+    .stat-card { padding: 1rem; }
+}
+
+/* Sidebar Overlay */
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 1999;
+    display: none;
+}
+
+.sidebar-overlay.active {
+    display: block;
 }
 
 /* Notifications Dropdown */
@@ -488,3 +586,46 @@ body {
     font-size: 0.9rem;
 }
 
+
+/* Print Styles */
+@media print {
+    .sidebar, .top-bar, .header-actions, .admin-only, .badge {
+        display: none !important;
+    }
+    .main-content {
+        margin-left: 0 !important;
+        padding: 0 !important;
+        background: #fff !important;
+        color: #000 !important;
+    }
+    .app-container {
+        display: block !important;
+    }
+    .glass-panel {
+        background: #fff !important;
+        border: 1px solid #ddd !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+        color: #000 !important;
+    }
+    .text-glow, .text-glow-primary {
+        text-shadow: none !important;
+        color: #000 !important;
+    }
+    .student-profile {
+        display: block !important;
+    }
+    .profile-card, .modules-card {
+        margin-bottom: 30px !important;
+        page-break-inside: avoid;
+    }
+    .gpa-value {
+        color: #000 !important;
+    }
+    .progress-bar-bg {
+        border: 1px solid #000 !important;
+    }
+    .progress-bar-fill {
+        background: #000 !important;
+    }
+}
