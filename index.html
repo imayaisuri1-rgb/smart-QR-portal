@@ -69,13 +69,15 @@
                         style="width: auto; height: 100px; filter: drop-shadow(0 0 15px var(--accent)) drop-shadow(0 0 30px var(--accent)); transition: filter 0.3s ease;">
                 </div>
                 <div class="user-profile">
+                    <a href="settings.html" style="text-decoration: none; color: inherit;">
+                        <div class="profile-avatar glass-panel">
+                            <i class="fa-solid fa-user-shield"></i>
+                            <span>Admin</span>
+                        </div>
+                    </a>
                     <div class="notifications glass-panel">
                         <i class="fa-regular fa-bell"></i>
                         <span class="badge">3</span>
-                    </div>
-                    <div class="profile-avatar glass-panel">
-                        <i class="fa-solid fa-user-shield"></i>
-                        <span>Admin</span>
                     </div>
                 </div>
             </header>
@@ -92,7 +94,7 @@
                                 activities.</p>
                         </div>
                     </div>
-                    <div style="display: flex; gap: 1rem;" class="admin-only">
+                    <div style="display: flex; gap: 1rem;" class="admin-only desktop-only">
                         <a href="students.html" class="btn-primary"
                             style="text-decoration: none; padding: 12px 24px; border-radius: 8px; color: white;"><i
                                 class="fa-solid fa-user-plus"></i> Manage Students</a>

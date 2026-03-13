@@ -5,6 +5,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const entryCount = document.getElementById('entry-count');
     const searchInput = document.getElementById('global-search');
     const statusFilter = document.getElementById('status-filter');
+    const startDateInput = document.getElementById('start-date');
+    const endDateInput = document.getElementById('end-date');
+    const locationFilter = document.getElementById('location-filter');
 
     // --- Cloud Database Logic ---
     const seedAttendanceData = async () => {
@@ -69,9 +72,13 @@ document.addEventListener('DOMContentLoaded', () => {
     let allAttendanceLogs = [];
 
     const init = async () => {
+        const todayStr = new Date().toISOString().split('T')[0];
+        if (startDateInput) startDateInput.value = todayStr;
+        if (endDateInput) endDateInput.value = todayStr;
+        
         await seedAttendanceData();
         allAttendanceLogs = await fetchAttendance();
-        renderTable(allAttendanceLogs);
+        filterData(); // automatically applies the date filters on load
     };
 
     // Render Table Helper
@@ -135,26 +142,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Filtering Logic
     const filterData = () => {
-        const searchTerm = searchInput.value.toLowerCase();
-        const statusTerm = statusFilter.value;
+        const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+        const statusTerm = statusFilter ? statusFilter.value : 'all';
+        const startD = startDateInput ? startDateInput.value : '';
+        const endD = endDateInput ? endDateInput.value : '';
+        const locTerm = locationFilter ? locationFilter.value : 'all';
 
         const filtered = allAttendanceLogs.filter(record => {
             const matchesSearch =
-                record.name.toLowerCase().includes(searchTerm) ||
-                record.id.toLowerCase().includes(searchTerm) ||
-                record.course.toLowerCase().includes(searchTerm);
+                (record.name && record.name.toLowerCase().includes(searchTerm)) ||
+                (record.id && record.id.toLowerCase().includes(searchTerm)) ||
+                (record.course && record.course.toLowerCase().includes(searchTerm));
 
             const matchesStatus = statusTerm === 'all' || record.status === statusTerm;
+            const matchesLocation = locTerm === 'all' || record.location === locTerm;
+            
+            let matchesDate = true;
+            if (record.date) {
+                if (startD && record.date < startD) matchesDate = false;
+                if (endD && record.date > endD) matchesDate = false;
+            }
 
-            return matchesSearch && matchesStatus;
+            return matchesSearch && matchesStatus && matchesDate && matchesLocation;
         });
 
         renderTable(filtered);
     };
 
     // Event Listeners
-    searchInput.addEventListener('input', filterData);
-    statusFilter.addEventListener('change', filterData);
+    if (searchInput) searchInput.addEventListener('input', filterData);
+    if (statusFilter) statusFilter.addEventListener('change', filterData);
+    if (startDateInput) startDateInput.addEventListener('change', filterData);
+    if (endDateInput) endDateInput.addEventListener('change', filterData);
+    if (locationFilter) locationFilter.addEventListener('change', filterData);
 
     const exportBtn = document.getElementById('export-csv-btn');
     if (exportBtn) {

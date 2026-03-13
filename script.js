@@ -81,33 +81,35 @@ document.addEventListener('DOMContentLoaded', () => {
     const initDashboard = async () => {
         const role = localStorage.getItem('role');
         const loggedInStr = localStorage.getItem('loggedInStudent');
+        const adminWelcome = document.getElementById('admin-welcome');
 
         try {
             if (role === 'student' && loggedInStr) {
-                const loggedInStudent = JSON.parse(loggedInStr);
+                const student = JSON.parse(loggedInStr);
                 
-                // Fetch fresh data from Firestore
-                const doc = await db.collection('students').doc(loggedInStudent.id).get();
-                if (!doc.exists) return;
-                const student = doc.data();
+                // Fetch latest data from Firestore
+                const studentDoc = await db.collection('students').doc(student.id).get();
+                const latestStudent = studentDoc.exists ? studentDoc.data() : student;
 
-                // Update Welcome
                 if(adminWelcome) {
-                    adminWelcome.innerHTML = `<span class="text-glow">Welcome back, ${student.name.split(' ')[0]}!</span>`;
+                    adminWelcome.innerHTML = `<span class="text-glow">Welcome back, ${latestStudent.name.split(' ')[0]}!</span>`;
                     const welcomeSub = adminWelcome.nextElementSibling;
-                    if(welcomeSub) welcomeSub.innerText = "Here's your academic summary for the semester.";
+                    if(welcomeSub) welcomeSub.innerText = "Here's your academic progress overview.";
                 }
 
-                // Update Stats
-                const gpaEl = document.getElementById('student-gpa');
-                const creditsEl = document.getElementById('student-credits');
-                const attendanceEl = document.getElementById('student-attendance');
+                if (gpaEl) gpaEl.innerText = parseFloat(latestStudent.gpa || 0).toFixed(2);
+                if (creditsEl) creditsEl.innerText = latestStudent.earnedCredits || 0;
 
-                if(gpaEl) gpaEl.innerText = parseFloat(student.gpa || 0).toFixed(2);
-                if(creditsEl) creditsEl.innerText = student.earnedCredits || 0;
-                
-                // Real-time attendance percentage based on logic (placeholder for now, but 0 instead of 92)
-                if(attendanceEl) attendanceEl.innerText = "100%"; 
+                // Calculate real Attendance percentage
+                try {
+                    const attendanceSnapshot = await db.collection('attendance').where('id', '==', latestStudent.id).get();
+                    const totalDays = 30; // Target days for a semester
+                    const presentDays = attendanceSnapshot.size;
+                    const percent = Math.min(Math.round((presentDays / totalDays) * 100), 100);
+                    if (attendEl) attendEl.innerText = `${percent}%`;
+                } catch (err) {
+                    console.error("Attendance calc error:", err);
+                }
 
                 // Logs are now handled by notifications.js for better synchronization
             } else if (role === 'admin') {

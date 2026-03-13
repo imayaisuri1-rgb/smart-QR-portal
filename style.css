@@ -368,6 +368,10 @@ body {
         width: 95%;
         padding: 1.5rem;
     }
+
+    .desktop-only {
+        display: none !important;
+    }
 }
 
 @media (max-width: 480px) {
@@ -416,6 +420,13 @@ body {
     z-index: 1000;
     transform-origin: top right;
     animation: dropdownSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (max-width: 480px) {
+    .notification-dropdown {
+        width: 280px;
+        right: -50px; /* Adjust to help center it on very small screens */
+    }
 }
 
 .notification-dropdown.active {

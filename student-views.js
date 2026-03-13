@@ -251,7 +251,39 @@ document.addEventListener('DOMContentLoaded', () => {
         else student.standing = "At Risk";
     };
 
+    const deleteStudent = async (studentId) => {
+        if (!confirm('CRITICAL: Are you sure you want to permanently delete this student record? This action cannot be undone.')) return;
+        
+        try {
+            const doc = await db.collection('students').doc(studentId).get();
+            const student = doc.data();
+            
+            await db.collection('students').doc(studentId).delete();
+            
+            // Log activity
+            await db.collection('activityLogs').add({
+                studentName: "Admin",
+                action: `Student Deleted: ${student.name} (#${studentId})`,
+                timestamp: firebase.firestore.Timestamp.now(),
+                role: "admin"
+            });
+
+            alert('Student record deleted successfully.');
+            detailView.style.display = 'none';
+            listView.style.display = 'block';
+            renderStudentList();
+        } catch (error) {
+            console.error('Error deleting student:', error);
+            alert('Failed to delete student.');
+        }
+    };
+
     // Event Listeners
+    const deleteStudentBtn = document.getElementById('delete-student-btn');
+    if (deleteStudentBtn) {
+        deleteStudentBtn.addEventListener('click', () => deleteStudent(currentEditingStudentId));
+    }
+
     if (backBtn) {
         backBtn.addEventListener('click', () => {
             detailView.style.display = 'none';

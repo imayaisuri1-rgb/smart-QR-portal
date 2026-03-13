@@ -101,10 +101,4 @@ document.addEventListener('DOMContentLoaded', () => {
             handleLogout();
         });
     }
-
-    if (profileAvatarEl) {
-        profileAvatarEl.addEventListener('click', handleLogout);
-        profileAvatarEl.style.cursor = 'pointer';
-        profileAvatarEl.title = 'Click to log out';
-    }
 });

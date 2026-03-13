@@ -71,13 +71,15 @@
                     <img src="https://d1lmq142maiv1z.cloudfront.net/Untitled_1_01_682429d2a3.svg" alt="Campus Logo" style="width: auto; height: 100px; filter: drop-shadow(0 0 15px var(--accent)) drop-shadow(0 0 30px var(--accent)); transition: filter 0.3s ease;">
                 </div>
                 <div class="user-profile">
+                    <a href="settings.html" style="text-decoration: none; color: inherit;">
+                        <div class="profile-avatar glass-panel">
+                            <i class="fa-solid fa-user-shield"></i>
+                            <span>Admin</span>
+                        </div>
+                    </a>
                     <div class="notifications glass-panel">
                         <i class="fa-regular fa-bell"></i>
                         <span class="badge">3</span>
-                    </div>
-                    <div class="profile-avatar glass-panel">
-                        <i class="fa-solid fa-user-shield"></i>
-                        <span>Admin</span>
                     </div>
                 </div>
             </header>
@@ -88,13 +90,13 @@
                     <p class="text-muted">QR identification metrics and campus traffic intelligence.</p>
                 </div>
                 <div class="header-actions">
-                    <select class="glass-input date-range-select">
-                        <option>Last 7 Days</option>
-                        <option>Last 30 Days</option>
-                        <option>This Semester</option>
-                        <option>Custom Range</option>
+                    <select class="glass-input date-range-select" id="dateFilter">
+                        <option value="today">Today</option>
+                        <option value="7days" selected>Last 7 Days</option>
+                        <option value="30days">Last 30 Days</option>
+                        <option value="semester">This Semester</option>
                     </select>
-                    <button class="btn-primary"><i class="fa-solid fa-file-export"></i> Generate Report</button>
+                    <button class="btn-primary" id="generateReportBtn"><i class="fa-solid fa-file-export"></i> Generate Report</button>
                 </div>
             </div>
 
