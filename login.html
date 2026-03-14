@@ -41,32 +41,13 @@
                 </div>
 
                 <!-- Student Login Form -->
-                <form class="login-form active" id="student-login">
-                    <button type="button" class="btn-QR" id="btn-qr-login" style="width: 100%; margin-bottom: 20px;">
+                <form class="login-form active" id="student-login" style="flex-direction: column; justify-content: center; align-items: center; min-height: 200px;">
+                    <button type="button" class="btn-QR" id="btn-qr-login" style="width: 100%; padding: 20px; font-size: 1.1rem;">
                         <i class="fa-solid fa-qrcode pulse"></i> Scan QR Code / Upload Image
                     </button>
-
-                    <div class="divider">
-                        <span>OR</span>
-                    </div>
-
-                    <div class="input-group">
-                        <label for="student-id">Student ID</label>
-                        <div class="input-wrapper text-glow-focus">
-                            <i class="fa-solid fa-id-card"></i>
-                            <input type="text" id="student-id" placeholder="e.g. SC-1024">
-                        </div>
-                    </div>
-
-                    <div class="input-group">
-                        <label for="student-password">Password / PIN</label>
-                        <div class="input-wrapper text-glow-focus">
-                            <i class="fa-solid fa-lock"></i>
-                            <input type="password" id="student-password" placeholder="••••••••">
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn-primary">Sign In as Student</button>
+                    <p class="text-muted" style="margin-top: 1.5rem; text-align: center; font-size: 0.9rem;">
+                        <i class="fa-solid fa-circle-info"></i> Traditional login has been disabled. Use your Student QR ID for secure access.
+                    </p>
                 </form>
 
                 <!-- Admin Login Form -->

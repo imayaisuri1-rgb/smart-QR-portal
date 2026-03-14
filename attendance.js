@@ -7,7 +7,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const statusFilter = document.getElementById('status-filter');
     const startDateInput = document.getElementById('start-date');
     const endDateInput = document.getElementById('end-date');
-    const locationFilter = document.getElementById('location-filter');
 
     // --- Cloud Database Logic ---
     const seedAttendanceData = async () => {
@@ -119,8 +118,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div>${record.date}</div>
                     <div class="text-muted" style="font-size: 0.85rem;">${record.time}</div>
                 </td>
-                <td>${record.location}</td>
-                <td><i class="fa-solid fa-${record.method === 'QR Code' ? 'qrcode' : 'keyboard'} method-icon"></i> ${record.method === 'QR Code' ? 'QR' : 'ID'}</td>
                 <td>${getStatusBadge(record.status)}</td>
                 <td>
                     <button class="action-btn view-btn" title="View Details"><i class="fa-regular fa-eye"></i></button>
@@ -146,8 +143,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const statusTerm = statusFilter ? statusFilter.value : 'all';
         const startD = startDateInput ? startDateInput.value : '';
         const endD = endDateInput ? endDateInput.value : '';
-        const locTerm = locationFilter ? locationFilter.value : 'all';
-
         const filtered = allAttendanceLogs.filter(record => {
             const matchesSearch =
                 (record.name && record.name.toLowerCase().includes(searchTerm)) ||
@@ -155,7 +150,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 (record.course && record.course.toLowerCase().includes(searchTerm));
 
             const matchesStatus = statusTerm === 'all' || record.status === statusTerm;
-            const matchesLocation = locTerm === 'all' || record.location === locTerm;
             
             let matchesDate = true;
             if (record.date) {
@@ -163,7 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (endD && record.date > endD) matchesDate = false;
             }
 
-            return matchesSearch && matchesStatus && matchesDate && matchesLocation;
+            return matchesSearch && matchesStatus && matchesDate;
         });
 
         renderTable(filtered);
@@ -174,7 +168,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (statusFilter) statusFilter.addEventListener('change', filterData);
     if (startDateInput) startDateInput.addEventListener('change', filterData);
     if (endDateInput) endDateInput.addEventListener('change', filterData);
-    if (locationFilter) locationFilter.addEventListener('change', filterData);
 
     const exportBtn = document.getElementById('export-csv-btn');
     if (exportBtn) {
@@ -185,7 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // Define CSV headers
-            const headers = ['Student Name', 'Student ID', 'Course', 'Date', 'Time', 'Location', 'Method', 'Status'];
+            const headers = ['Student Name', 'Student ID', 'Course', 'Date', 'Time', 'Status'];
 
             // Map logs to CSV rows
             const rows = allAttendanceLogs.map(log => [
@@ -194,8 +187,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 `"${log.course}"`,
                 `"${log.date}"`,
                 `"${log.time}"`,
-                `"${log.location}"`,
-                `"${log.method}"`,
                 `"${log.status}"`
             ]);
 
